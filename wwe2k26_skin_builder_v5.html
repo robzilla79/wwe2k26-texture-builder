@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WWE 2K26 Skin Builder + Enhance Studio</title>
+<style>
+:root{--bg:#070a10;--panel:#0f1520;--card:#0b1220;--line:#1e3050;--text:#e5edf8;--muted:#7a93b0;--accent:#ff4d6d;--blue:#5bc0eb}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,system-ui,sans-serif;padding-bottom:60px}
+input,select,button,textarea{font:inherit}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;padding:12px 18px;background:linear-gradient(90deg,#0d1828,#162540);border-bottom:1px solid var(--line)}
+header h1{font-size:1rem;font-weight:700}
+header .sub{font-size:.76rem;color:var(--muted);margin-left:10px}
+
+/* ── LAYOUT ── */
+.wrap{display:grid;grid-template-columns:310px 1fr 320px;min-height:calc(100vh - 50px)}
+.lpanel,.rpanel{background:var(--panel);padding:12px;overflow-y:auto;border-right:1px solid var(--line)}
+.rpanel{border-right:none;border-left:1px solid var(--line)}
+.center{background:#080c14;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:14px;gap:10px;overflow:auto}
+
+/* ── CONTROLS ── */
+.grp{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:10px}
+.sec{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--blue);margin-top:6px;margin-bottom:4px}
+label.lbl{display:block;font-size:.74rem;color:var(--muted);margin:7px 0 3px}
+input[type=color]{width:100%;height:36px;border:none;background:none;cursor:pointer;border-radius:6px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.val{font-size:.72rem;color:var(--muted)}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+
+/* ── CHIP / PART / BTN ── */
+.chip,.part,.xbtn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:8px;cursor:pointer;padding:8px 10px;text-align:center;font-size:.8rem;transition:.15s}
+.chip:hover,.part:hover,.xbtn:hover{border-color:var(--blue)}
+.chip.on,.part.on{background:var(--blue);border-color:var(--blue);color:#07121e;font-weight:700}
+.parts{display:flex;flex-wrap:wrap;gap:6px}
+.xbtn{width:100%;padding:10px;margin-top:6px}.xbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.xbtn:hover{transform:translateY(-1px)}
+
+/* ── CANVAS ── */
+.stack{position:relative;display:inline-block}.stack canvas{position:absolute;top:0;left:0}
+canvas{display:block;border-radius:12px;box-shadow:0 0 0 1px #1e3050}
+#guides{pointer-events:none}
+.sbar{font-size:.76rem;color:var(--muted)}
+.info{font-size:.74rem;color:var(--muted);line-height:1.55;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px;margin-top:6px}
+
+/* ══════════════════════════════════════════
+   SKIN ENHANCE STUDIO  (bottom drawer)
+══════════════════════════════════════════ */
+#studio{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:#090e1c;border-top:2px solid var(--blue);
+  transform:translateY(calc(100% - 50px));
+  transition:transform .3s ease;
+  box-shadow:0 -8px 28px rgba(0,0,0,.55)
+}
+#studio.open{transform:translateY(0)}
+
+#stHdr{
+  height:50px;display:flex;align-items:center;gap:12px;
+  padding:0 18px;cursor:pointer;
+  background:linear-gradient(90deg,#0c1728,#132035);
+  border-bottom:1px solid var(--line)
+}
+#stHdr .title{font-size:.88rem;font-weight:700;color:var(--blue)}
+#stHdr .hint{font-size:.73rem;color:#4d6880;margin-left:auto}
+.dot{width:11px;height:11px;border-radius:50%;background:#2d4560;flex-shrink:0;transition:.3s}
+.dot.ok{background:#27ae60;box-shadow:0 0 7px rgba(39,174,96,.7)}
+.dot.err{background:#c0392b;box-shadow:0 0 7px rgba(192,57,43,.6)}
+.dot.busy{background:#f39c12;box-shadow:0 0 7px rgba(243,156,18,.6)}
+
+#stBody{
+  display:grid;grid-template-columns:280px 1fr 320px;
+  height:calc(100vh - 200px);max-height:450px
+}
+.scol{padding:13px;overflow-y:auto;border-right:1px solid var(--line)}
+.scol:last-child{border-right:none}
+.shead{display:flex;align-items:center;gap:9px;margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.snum{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#07121e;font-size:.82rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stit{font-size:.88rem;font-weight:700;color:var(--text)}.ssub{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+.sc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:9px}
+.sl{display:block;font-size:.73rem;color:var(--muted);margin:7px 0 3px}
+.si,.st{width:100%;background:#06101c;border:1px solid var(--line);color:var(--text);border-radius:7px;padding:8px 9px;font:inherit;font-size:.81rem}
+.si:focus,.st:focus{outline:none;border-color:var(--blue)}
+.st{resize:vertical;min-height:72px}
+.sb{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;font:inherit;font-size:.81rem;transition:.15s}
+.sb:hover{border-color:var(--blue);transform:translateY(-1px)}
+.sb.sp{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.sb.ss{background:#0d1e34;border-color:#1a3a5c;color:#aed4f0}
+.ss2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat{font-size:.75rem;padding:7px 9px;border-radius:7px;background:#06101c;border:1px solid var(--line);color:var(--muted);min-height:34px;line-height:1.5}
+.stat.ok{border-color:#27ae60;color:#2ecc71}
+.stat.err{border-color:#c0392b;color:#ff9b9b}
+.stat.busy{border-color:#f39c12;color:#f7d06a}
+
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mb,.pb{border:1px solid var(--line);background:#06101c;color:#ccd8ea;border-radius:9px;padding:9px;cursor:pointer;transition:.15s;text-align:left}
+.mb:hover,.pb:hover{border-color:var(--blue)}
+.mb.on,.pb.on{border-color:var(--blue);background:#0d2038;box-shadow:inset 0 0 0 1px rgba(91,192,235,.18)}
+.mb strong,.pb strong{display:block;font-size:.81rem;color:#edf3fb}
+.mb span,.pb span{display:block;font-size:.7rem;color:var(--muted);margin-top:3px;line-height:1.4}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+
+.rw{background:#06101c;border:1px solid var(--line);border-radius:9px;padding:9px}
+.rt{display:flex;justify-content:space-between;font-size:.73rem;color:var(--muted);margin-bottom:5px}
+.atog{display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:.77rem;color:var(--blue);background:#06101c;border:1px solid var(--line);padding:8px 9px;border-radius:9px}
+.abody{display:none;margin-top:7px}.abody.open{display:block}
+
+.tcard{background:linear-gradient(180deg,#0e1f34,#080e1c);border:1px solid #1a3a5c;border-radius:10px;padding:11px;margin-bottom:9px}
+.tname{font-size:.94rem;font-weight:800;color:#fff}.tmeta{font-size:.72rem;color:#7dbde8;margin-top:3px}
+
+#rout{background:#040810;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;border:1px dashed var(--line);padding:10px;overflow:auto;gap:7px;margin-top:8px}
+.rph{color:#344860;font-size:.8rem;text-align:center;line-height:1.55}
+#rout img{max-width:100%;border-radius:8px;box-shadow:0 0 0 1px var(--line)}
+
+progress{width:100%;height:6px;border-radius:3px;appearance:none;margin-top:5px}
+progress::-webkit-progress-bar{background:#06101c;border-radius:3px}
+progress::-webkit-progress-value{background:var(--blue);border-radius:3px}
+
+.gb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px;max-height:220px;overflow-y:auto;margin-top:7px}
+.gb h4{margin:8px 0 4px;font-size:.78rem;color:var(--text)}
+.gb li,.gb p{font-size:.71rem;color:#96a8bc;line-height:1.55}
+.gb ul,.gb ol{padding-left:15px;margin:4px 0}
+.mh{font-size:.71rem;color:var(--muted);line-height:1.5;margin-top:7px}
+
+@media(max-width:1100px){
+  .wrap{grid-template-columns:1fr}
+  .lpanel,.rpanel{border:none;border-bottom:1px solid var(--line)}
+  #stBody{grid-template-columns:1fr;max-height:none;height:auto}
+  .scol{border-right:none;border-bottom:1px solid var(--line)}
+  .scol:last-child{border-bottom:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>WWE 2K26 Skin Builder</h1>
+  <span class="sub">Paint · AI-Enhance · Export</span>
+</header>
+
+<div class="wrap">
+
+  <!-- LEFT PANEL -->
+  <div class="lpanel">
+    <div class="grp">
+      <label class="lbl">Canvas size</label>
+      <div class="r3" id="sizeChips">
+        <div class="chip" data-sz="512">512</div>
+        <div class="chip on" data-sz="1024">1024</div>
+        <div class="chip" data-sz="2048">2048</div>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="sec">Skin colours</div>
+      <label class="lbl">Base</label><input type="color" id="skinBase" value="#c48864">
+      <label class="lbl">Warm undertone</label><input type="color" id="skinWarm" value="#b76040">
+      <label class="lbl">Deep shadow</label><input type="color" id="skinShadow" value="#6b3525">
+      <label class="lbl">Top highlight</label><input type="color" id="skinLight" value="#f7e0cc">
+    </div>
+
+    <div class="grp">
+      <div class="sec">Skin properties</div>
+      <label class="lbl">Opacity <span class="val" id="vBase">85%</span></label>
+      <input type="range" id="baseStrength" min="0" max="100" value="85">
+      <label class="lbl">Warmth <span class="val" id="vWarm">32%</span></label>
+      <input type="range" id="warmth" min="0" max="100" value="32">
+      <label class="lbl">Pore detail <span class="val" id="vPore">32%</span></label>
+      <input type="range" id="pores" min="0" max="100" value="32">
+      <label class="lbl">Mottling <span class="val" id="vMottle">22%</span></label>
+      <input type="range" id="mottle" min="0" max="100" value="22">
+      <label class="lbl">Micro sheen <span class="val" id="vSheen">18%</span></label>
+      <input type="range" id="sheen" min="0" max="100" value="18">
+      <label class="lbl">Edge feather <span class="val" id="vEdge">20%</span></label>
+      <input type="range" id="edge" min="0" max="60" value="20">
+    </div>
+
+    <div class="grp">
+      <div class="sec">Muscle tone</div>
+      <label class="lbl">Overall <span class="val" id="vDef">64%</span></label><input type="range" id="def" min="0" max="100" value="64">
+      <label class="lbl">Abs <span class="val" id="vAbs">70%</span></label><input type="range" id="abs" min="0" max="100" value="70">
+      <label class="lbl">Chest <span class="val" id="vChest">36%</span></label><input type="range" id="chest" min="0" max="100" value="36">
+      <label class="lbl">Back <span class="val" id="vBack">44%</span></label><input type="range" id="back" min="0" max="100" value="44">
+      <label class="lbl">Glutes <span class="val" id="vGlute">58%</span></label><input type="range" id="glutes" min="0" max="100" value="58">
+      <label class="lbl">Quads <span class="val" id="vQuad">68%</span></label><input type="range" id="quads" min="0" max="100" value="68">
+      <label class="lbl">Hamstrings <span class="val" id="vHam">42%</span></label><input type="range" id="hams" min="0" max="100" value="42">
+      <label class="lbl">Calves <span class="val" id="vCalf">46%</span></label><input type="range" id="calves" min="0" max="100" value="46">
+      <label class="lbl">Arms <span class="val" id="vArm">40%</span></label><input type="range" id="arms" min="0" max="100" value="40">
+    </div>
+
+    <div class="grp">
+      <div class="sec">Parts to export</div>
+      <div class="parts">
+        <div class="part on" data-part="torsoFront">Torso Front</div>
+        <div class="part on" data-part="torsoBack">Torso Back</div>
+        <div class="part on" data-part="glutes">Glutes</div>
+        <div class="part on" data-part="leftArm">Left Arm</div>
+        <div class="part on" data-part="rightArm">Right Arm</div>
+        <div class="part on" data-part="leftLegFront">L Leg Front</div>
+        <div class="part on" data-part="rightLegFront">R Leg Front</div>
+        <div class="part on" data-part="leftLegBack">L Leg Back</div>
+        <div class="part on" data-part="rightLegBack">R Leg Back</div>
+      </div>
+      <div class="r2" style="margin-top:8px">
+        <button class="xbtn" id="selAll">Select all</button>
+        <button class="xbtn" id="clrAll">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="stack" id="stack">
+      <canvas id="main"></canvas>
+      <canvas id="guides"></canvas>
+    </div>
+    <div class="sbar" id="sbar">1024x1024 — ready</div>
+    <div class="info">Each tile is painted with realistic skin tone, warm undertones, pores, mottling and muscle definition. Select parts below and export as transparent PNGs for WWE 2K.</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rpanel">
+    <div class="grp">
+      <div class="sec">Quick looks</div>
+      <div class="r2" id="lookChips">
+        <div class="chip" data-look="soft">Soft</div>
+        <div class="chip on" data-look="athletic">Athletic</div>
+        <div class="chip" data-look="defined">Defined</div>
+        <div class="chip" data-look="stage">Stage</div>
+      </div>
+      <div class="info">Athletic is the best starting point. Tune the colours and muscle sliders to match your character, then export.</div>
+    </div>
+    <div class="grp">
+      <div class="sec">Export</div>
+      <button class="xbtn" id="btnSel">Export selected parts</button>
+      <button class="xbtn" id="btnAtlas">Export atlas preview</button>
+      <button class="xbtn pri" id="btnAll">Export all parts</button>
+      <div class="info">Each part downloads as a transparent PNG. Upload to WWE 2K Image Uploader, then apply in game. See the Apply in WWE 2K guide in the Studio below.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SKIN ENHANCE STUDIO -->
+<div id="studio">
+  <div id="stHdr" onclick="stToggle()">
+    <div class="dot" id="stDot"></div>
+    <span class="title">⚡ Skin Enhance Studio</span>
+    <span class="hint" id="stHint">click to expand</span>
+  </div>
+
+  <div id="stBody">
+
+    <!-- STEP 1 -->
+    <div class="scol">
+      <div class="shead">
+        <div class="snum">1</div>
+        <div><div class="stit">Connect &amp; Model</div><div class="ssub">Link ComfyUI, choose a realistic checkpoint</div></div>
+      </div>
+      <div class="sc">
+        <span class="sl">ComfyUI URL</span>
+        <input class="si" id="cuiUrl" value="http://127.0.0.1:8188">
+        <button class="sb ss" style="margin-top:8px" onclick="stConnect()">Test connection</button>
+        <div class="stat" id="stConnStat" style="margin-top:7px">Not connected yet.</div>
+      </div>
+      <div class="sc">
+        <span class="sl">Checkpoint</span>
+        <select class="si" id="stCkpt"><option>-- connect first --</option></select>
+        <span class="sl">VAE</span>
+        <select class="si" id="stVae"><option value="">Default (baked in)</option></select>
+        <div class="mh">For female fitness/bikini use a realistic SDXL or photoreal checkpoint. Refine tile mode at 0.45–0.60 denoise gives the most consistent results.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="scol">
+      <div class="shead">
+        <div class="snum">2</div>
+        <div><div class="stit">Skin Style</div><div class="ssub">Choose a female preset and refine options</div></div>
+      </div>
+      <div class="sc">
+        <span class="sl" style="margin-top:0">Mode</span>
+        <div class="mg">
+          <button class="mb on" data-wf="img2img" onclick="stMode(this)"><strong>Refine tile</strong><span>Uses your painted atlas tile as init image. Best for realistic skin.</span></button>
+          <button class="mb" data-wf="txt2img" onclick="stMode(this)"><strong>From scratch</strong><span>Generates without a tile base. More creative, less consistent.</span></button>
+        </div>
+      </div>
+      <div class="sc">
+        <span class="sl" style="margin-top:0">Presets</span>
+        <div class="pg">
+          <button class="pb on" data-pr="fitness" onclick="stPreset(this)"><strong>Fitness Model</strong><span>Balanced tan, soft abs, strong glutes &amp; legs, healthy sheen.</span></button>
+          <button class="pb" data-pr="bikini" onclick="stPreset(this)"><strong>Bikini Stage</strong><span>Deep competition tan, glute pop, polished stage shine.</span></button>
+          <button class="pb" data-pr="glam" onclick="stPreset(this)"><strong>Soft Glam</strong><span>Smoother gradients, softer definition, beauty finish.</span></button>
+          <button class="pb" data-pr="vascular" onclick="stPreset(this)"><strong>Cut &amp; Vascular</strong><span>Sharper delts &amp; legs, tasteful vascular tone.</span></button>
+        </div>
+      </div>
+      <div class="sc" id="stRefCard">
+        <div class="rw">
+          <div class="rt"><span>Refine strength</span><span id="stDenV">0.55</span></div>
+          <input class="si" type="range" id="stDenoise" min="20" max="85" value="55"
+            oninput="document.getElementById('stDenV').textContent=(this.value/100).toFixed(2)">
+          <div style="font-size:.7rem;color:var(--muted);margin-top:4px">Lower = preserve painted tile. Higher = AI redesigns more.</div>
+        </div>
+      </div>
+      <div class="sc">
+        <div class="atog" onclick="stAdv()"><span>Advanced prompts &amp; settings</span><span id="stAdvArr">▾</span></div>
+        <div class="abody" id="stAdvBody">
+          <span class="sl">Positive prompt</span>
+          <textarea class="st" id="stPos"></textarea>
+          <span class="sl">Negative prompt</span>
+          <textarea class="st" id="stNeg"></textarea>
+          <div class="ss2">
+            <div><span class="sl">Width</span><input class="si" type="number" id="stW" value="512" min="256" max="1024" step="64"></div>
+            <div><span class="sl">Height</span><input class="si" type="number" id="stH" value="512" min="256" max="1024" step="64"></div>
+          </div>
+          <div class="ss2">
+            <div><span class="sl">Steps</span><input class="si" type="number" id="stSteps" value="26" min="10" max="60"></div>
+            <div><span class="sl">CFG</span><input class="si" type="number" id="stCfg" value="7" min="1" max="20" step="0.5"></div>
+          </div>
+          <div class="ss2">
+            <div>
+              <span class="sl">Sampler</span>
+              <select class="si" id="stSampler">
+                <option>dpmpp_2m</option><option>euler_ancestral</option>
+                <option>euler</option><option>dpm_2_ancestral</option><option>ddim</option>
+              </select>
+            </div>
+            <div><span class="sl">Seed (-1=random)</span><input class="si" type="number" id="stSeed" value="-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="scol">
+      <div class="shead">
+        <div class="snum">3</div>
+        <div><div class="stit">Enhance &amp; Apply</div><div class="ssub">Generate, preview, stamp back into atlas</div></div>
+      </div>
+      <div class="tcard">
+        <div class="tname" id="stTargetName">Working on: Torso Front</div>
+        <div class="tmeta" id="stTargetMeta">Mode: Refine tile · Preset: Fitness Model</div>
+      </div>
+      <button class="sb sp" id="stRenderBtn" disabled onclick="stRender()">Enhance skin</button>
+      <div id="stProgWrap" style="display:none;margin-top:7px">
+        <progress id="stProg" value="0" max="100"></progress>
+        <div class="stat busy" id="stProgStat" style="margin-top:5px">Queued...</div>
+      </div>
+      <div id="rout">
+        <div class="rph">📷<br>Preview appears here after rendering.<br><span style="font-size:.69rem">Connect ComfyUI, select a tile, click Enhance skin.</span></div>
+      </div>
+      <div class="ss2" style="margin-top:7px">
+        <button class="sb" id="stApplyBtn" style="display:none" onclick="stApply()">Apply to atlas</button>
+        <button class="sb" id="stDlBtn" style="display:none" onclick="stDl()">Download PNG</button>
+      </div>
+
+      <div style="margin-top:9px">
+        <div class="atog" onclick="stGuide()"><span>Apply in WWE 2K</span><span id="stGuideArr">▾</span></div>
+        <div class="gb" id="stGuideBlock" style="display:none">
+          <h4>1. Upload PNGs</h4>
+          <ol>
+            <li>Export skin PNGs from this app (right panel).</li>
+            <li>Upload via the WWE 2K Image Uploader website using your game-linked account.</li>
+            <li>In game: Online → Community Creations → Image Manager → Incoming Images → Download.</li>
+          </ol>
+          <h4>2. Place each tile</h4>
+          <ul>
+            <li><strong>Torso Front</strong> — over chest and abs.</li>
+            <li><strong>Torso Back</strong> — upper and lower back.</li>
+            <li><strong>Left/Right Arm</strong> — shoulder to wrist on each arm.</li>
+            <li><strong>Left/Right Leg Front</strong> — thigh and shin front.</li>
+            <li><strong>Left/Right Leg Back</strong> — hamstring and calf back.</li>
+            <li><strong>Glutes</strong> — rear hip area bridging torso and legs.</li>
+          </ul>
+          <h4>3. Layering tips</h4>
+          <ul>
+            <li>Place skin overlays low in the layer stack; logos and gear go above.</li>
+            <li>Slightly overscale tiles so feathered edges overlap at joints.</li>
+            <li>For fitness/bikini characters keep opacity high for contour; reduce slightly if too harsh.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var mc=document.getElementById('main');
+var gc=document.getElementById('guides');
+var ctx=mc.getContext('2d');
+var gtx=gc.getContext('2d');
+var size=1024;
+
+var PARTS={
+  torsoFront:   {x:.28,y:.08,w:.22,h:.26,label:'TORSO FRONT', kind:'torsoFront'},
+  torsoBack:    {x:.52,y:.08,w:.22,h:.26,label:'TORSO BACK',  kind:'torsoBack'},
+  glutes:       {x:.40,y:.37,w:.20,h:.14,label:'GLUTES',      kind:'glutes'},
+  leftArm:      {x:.06,y:.09,w:.14,h:.34,label:'LEFT ARM',    kind:'arm'},
+  rightArm:     {x:.80,y:.09,w:.14,h:.34,label:'RIGHT ARM',   kind:'arm'},
+  leftLegFront: {x:.17,y:.54,w:.16,h:.38,label:'L LEG FRONT', kind:'legFront'},
+  rightLegFront:{x:.35,y:.54,w:.16,h:.38,label:'R LEG FRONT', kind:'legFront'},
+  leftLegBack:  {x:.53,y:.54,w:.16,h:.38,label:'L LEG BACK',  kind:'legBack'},
+  rightLegBack: {x:.71,y:.54,w:.16,h:.38,label:'R LEG BACK',  kind:'legBack'}
+};
+
+function hexRgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function sE(c,x,y,rx,ry,r,g,b,a){
+  if(a<=0)return;
+  var rad=Math.max(rx,ry);
+  var gr=c.createRadialGradient(x,y,0,x,y,rad);
+  gr.addColorStop(0,'rgba('+r+','+g+','+b+','+a+')');
+  gr.addColorStop(1,'rgba('+r+','+g+','+b+',0)');
+  c.save();c.fillStyle=gr;
+  if(ry!==rx){c.translate(x,y);c.scale(1,ry/Math.max(rx,1));c.translate(-x,-y);}
+  c.beginPath();c.arc(x,y,rx,0,Math.PI*2);c.fill();
+  c.restore();
+}
+
+function paintSkin(c,name,ox,oy,w,h){
+  var bHex=document.getElementById('skinBase').value;
+  var wHex=document.getElementById('skinWarm').value;
+  var sHex=document.getElementById('skinShadow').value;
+  var lHex=document.getElementById('skinLight').value;
+  var opac=+document.getElementById('baseStrength').value/100;
+  var warm=+document.getElementById('warmth').value/100;
+  var poreA=+document.getElementById('pores').value/100;
+  var mottA=+document.getElementById('mottle').value/100;
+  var sheenA=+document.getElementById('sheen').value/100;
+  var edgeA=+document.getElementById('edge').value/100;
+  var DEF=+document.getElementById('def').value/100;
+  var ABS=+document.getElementById('abs').value/100*DEF;
+  var CHE=+document.getElementById('chest').value/100*DEF;
+  var BAK=+document.getElementById('back').value/100*DEF;
+  var GLU=+document.getElementById('glutes').value/100*DEF;
+  var QUA=+document.getElementById('quads').value/100*DEF;
+  var HAM=+document.getElementById('hams').value/100*DEF;
+  var CAL=+document.getElementById('calves').value/100*DEF;
+  var ARM=+document.getElementById('arms').value/100*DEF;
+  var B=hexRgb(bHex),W=hexRgb(wHex),S=hexRgb(sHex),L=hexRgb(lHex);
+  var x=ox,y=oy,kind=PARTS[name].kind;
+  c.save();
+  rrect(c,x,y,w,h,Math.max(10,w*.06));c.clip();
+  var gr=c.createRadialGradient(x+w*.5,y+h*.14,w*.04,x+w*.5,y+h*.62,Math.max(w,h)*.84);
+  gr.addColorStop(0,'rgba('+L[0]+','+L[1]+','+L[2]+','+(opac*.54)+')');
+  gr.addColorStop(.22,'rgba('+B[0]+','+B[1]+','+B[2]+','+(opac*.97)+')');
+  gr.addColorStop(.64,'rgba('+W[0]+','+W[1]+','+W[2]+','+(opac*.86)+')');
+  gr.addColorStop(1,'rgba('+S[0]+','+S[1]+','+S[2]+','+(opac*.76)+')');
+  c.fillStyle=gr;c.fillRect(x,y,w,h);
+  c.fillStyle='rgba('+W[0]+','+W[1]+','+W[2]+','+(warm*.15)+')';c.fillRect(x,y,w,h);
+  sE(c,x+w*.5,y+h*.99,w*.55,h*.09,S[0],S[1],S[2],.16);
+  sE(c,x+w*.02,y+h*.5,w*.08,h*.46,S[0],S[1],S[2],.10);
+  sE(c,x+w*.98,y+h*.5,w*.08,h*.46,S[0],S[1],S[2],.10);
+  sE(c,x+w*.5,y+h*.04,w*.48,h*.08,L[0],L[1],L[2],sheenA*.26);
+  if(kind==='torsoFront'){
+    sE(c,x+w*.50,y+h*.52,w*.017,h*.30,S[0],S[1],S[2],ABS*.48);
+    [[.28,.014],[.43,.012],[.57,.010]].forEach(function(r){sE(c,x+w*.50,y+h*r[0],w*.22,h*r[1],S[0],S[1],S[2],ABS*.36);});
+    [[.42,.26],[.58,.26],[.42,.42],[.58,.42],[.42,.57],[.58,.57]].forEach(function(p){sE(c,x+w*p[0],y+h*p[1],w*.056,h*.028,L[0],L[1],L[2],ABS*.38);});
+    sE(c,x+w*.30,y+h*.20,w*.09,h*.046,S[0],S[1],S[2],CHE*.26);
+    sE(c,x+w*.70,y+h*.20,w*.09,h*.046,S[0],S[1],S[2],CHE*.26);
+    sE(c,x+w*.30,y+h*.14,w*.09,h*.044,L[0],L[1],L[2],CHE*.36);
+    sE(c,x+w*.70,y+h*.14,w*.09,h*.044,L[0],L[1],L[2],CHE*.36);
+    sE(c,x+w*.27,y+h*.46,w*.045,h*.13,S[0],S[1],S[2],ABS*.28);
+    sE(c,x+w*.73,y+h*.46,w*.045,h*.13,S[0],S[1],S[2],ABS*.28);
+  }
+  if(kind==='torsoBack'){
+    sE(c,x+w*.22,y+h*.44,w*.036,h*.24,S[0],S[1],S[2],BAK*.44);
+    sE(c,x+w*.78,y+h*.44,w*.036,h*.24,S[0],S[1],S[2],BAK*.44);
+    sE(c,x+w*.50,y+h*.44,w*.013,h*.28,S[0],S[1],S[2],BAK*.18);
+    sE(c,x+w*.36,y+h*.24,w*.086,h*.048,L[0],L[1],L[2],BAK*.28);
+    sE(c,x+w*.64,y+h*.24,w*.086,h*.048,L[0],L[1],L[2],BAK*.28);
+    sE(c,x+w*.34,y+h*.58,w*.075,h*.09,L[0],L[1],L[2],BAK*.22);
+    sE(c,x+w*.66,y+h*.58,w*.075,h*.09,L[0],L[1],L[2],BAK*.22);
+    sE(c,x+w*.50,y+h*.76,w*.12,h*.052,S[0],S[1],S[2],BAK*.20);
+  }
+  if(kind==='glutes'){
+    sE(c,x+w*.50,y+h*.64,w*.052,h*.052,S[0],S[1],S[2],GLU*.52);
+    sE(c,x+w*.33,y+h*.48,w*.10,h*.10,L[0],L[1],L[2],GLU*.48);
+    sE(c,x+w*.67,y+h*.48,w*.10,h*.10,L[0],L[1],L[2],GLU*.48);
+    sE(c,x+w*.33,y+h*.72,w*.085,h*.036,S[0],S[1],S[2],GLU*.34);
+    sE(c,x+w*.67,y+h*.72,w*.085,h*.036,S[0],S[1],S[2],GLU*.34);
+    sE(c,x+w*.50,y+h*.34,w*.16,h*.036,S[0],S[1],S[2],GLU*.22);
+  }
+  if(kind==='arm'){
+    sE(c,x+w*.46,y+h*.22,w*.11,h*.11,L[0],L[1],L[2],ARM*.36);
+    sE(c,x+w*.50,y+h*.40,w*.05,h*.17,S[0],S[1],S[2],ARM*.32);
+    sE(c,x+w*.54,y+h*.66,w*.09,h*.10,L[0],L[1],L[2],ARM*.26);
+    sE(c,x+w*.38,y+h*.28,w*.05,h*.13,S[0],S[1],S[2],ARM*.20);
+  }
+  if(kind==='legFront'){
+    sE(c,x+w*.34,y+h*.34,w*.09,h*.19,L[0],L[1],L[2],QUA*.42);
+    sE(c,x+w*.66,y+h*.34,w*.09,h*.19,L[0],L[1],L[2],QUA*.42);
+    sE(c,x+w*.50,y+h*.40,w*.034,h*.23,S[0],S[1],S[2],QUA*.38);
+    sE(c,x+w*.30,y+h*.56,w*.05,h*.08,S[0],S[1],S[2],QUA*.20);
+    sE(c,x+w*.70,y+h*.56,w*.05,h*.08,S[0],S[1],S[2],QUA*.20);
+    sE(c,x+w*.36,y+h*.73,w*.085,h*.09,L[0],L[1],L[2],CAL*.36);
+    sE(c,x+w*.64,y+h*.73,w*.085,h*.09,L[0],L[1],L[2],CAL*.36);
+    sE(c,x+w*.50,y+h*.77,w*.044,h*.10,S[0],S[1],S[2],CAL*.30);
+  }
+  if(kind==='legBack'){
+    sE(c,x+w*.40,y+h*.26,w*.085,h*.19,L[0],L[1],L[2],HAM*.36);
+    sE(c,x+w*.60,y+h*.26,w*.085,h*.19,L[0],L[1],L[2],HAM*.36);
+    sE(c,x+w*.50,y+h*.34,w*.034,h*.21,S[0],S[1],S[2],HAM*.32);
+    sE(c,x+w*.36,y+h*.74,w*.085,h*.085,L[0],L[1],L[2],CAL*.34);
+    sE(c,x+w*.64,y+h*.74,w*.085,h*.085,L[0],L[1],L[2],CAL*.34);
+    sE(c,x+w*.50,y+h*.78,w*.044,h*.09,S[0],S[1],S[2],CAL*.28);
+  }
+  var id=c.getImageData(x,y,w,h),d=id.data;
+  for(var i=0;i<d.length;i+=4){
+    if(d[i+3]<8)continue;
+    var n=(Math.random()-.5)*13;
+    var m=(Math.random()-.5)*(mottA*17);
+    d[i]=Math.max(0,Math.min(255,d[i]+n+m*1.25));
+    d[i+1]=Math.max(0,Math.min(255,d[i+1]+n+m*.72));
+    d[i+2]=Math.max(0,Math.min(255,d[i+2]+n-m*.32));
+    if(Math.random()<poreA*.058){d[i]=Math.max(0,d[i]-8);d[i+1]=Math.max(0,d[i+1]-6);d[i+2]=Math.max(0,d[i+2]-6);}
+  }
+  c.putImageData(id,x,y);
+  if(edgeA>0){
+    var mx=x+w/2,my=y+h/2;
+    var fe=c.createRadialGradient(mx,my,Math.min(w,h)*.28,mx,my,Math.max(w,h)*.72);
+    fe.addColorStop(0,'rgba(0,0,0,0)');
+    fe.addColorStop(.72,'rgba(0,0,0,0)');
+    fe.addColorStop(1,'rgba(0,0,0,'+(edgeA*.5)+')');
+    c.fillStyle=fe;c.fillRect(x,y,w,h);
+  }
+  c.restore();
+}
+
+function drawAtlas(){
+  ctx.clearRect(0,0,size,size);gtx.clearRect(0,0,size,size);
+  Object.keys(PARTS).forEach(function(name){
+    var b=PARTS[name];
+    var px=Math.round(b.x*size),py=Math.round(b.y*size),pw=Math.round(b.w*size),ph=Math.round(b.h*size);
+    var oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
+    paintSkin(oc.getContext('2d'),name,0,0,pw,ph);
+    ctx.drawImage(oc,px,py);
+  });
+  gtx.strokeStyle='rgba(91,192,235,.8)';gtx.lineWidth=2;gtx.setLineDash([7,5]);
+  gtx.fillStyle='rgba(255,255,255,.88)';gtx.font=Math.max(11,size/64)+'px Segoe UI,sans-serif';
+  Object.values(PARTS).forEach(function(b){
+    var x=b.x*size,y=b.y*size,w=b.w*size,h=b.h*size;
+    rrect(gtx,x,y,w,h,Math.max(10,w*.06));gtx.stroke();gtx.fillText(b.label,x+7,y+20);
+  });
+  gtx.setLineDash([]);
+  document.getElementById('sbar').textContent=size+'x'+size+' — skin atlas ready';
+}
+
+function resize(){
+  var d=Math.min(size,740);
+  [mc,gc].forEach(function(c){c.width=size;c.height=size;c.style.width=d+'px';c.style.height=d+'px';});
+  var s=document.getElementById('stack');s.style.width=d+'px';s.style.height=d+'px';
+}
+
+function exportPart(key){
+  var b=PARTS[key],pw=Math.round(b.w*size),ph=Math.round(b.h*size);
+  var oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
+  paintSkin(oc.getContext('2d'),key,0,0,pw,ph);
+  var a=document.createElement('a');a.download='wwe2k26_'+key+'_'+size+'.png';a.href=oc.toDataURL('image/png');a.click();
+}
+
+function selectedParts(){return Array.from(document.querySelectorAll('.part.on')).map(function(x){return x.dataset.part;});}
+
+function syncLabels(){
+  [['baseStrength','vBase'],['warmth','vWarm'],['pores','vPore'],['mottle','vMottle'],
+   ['sheen','vSheen'],['edge','vEdge'],['def','vDef'],['abs','vAbs'],['chest','vChest'],
+   ['back','vBack'],['glutes','vGlute'],['quads','vQuad'],['hams','vHam'],['calves','vCalf'],['arms','vArm']
+  ].forEach(function(p){document.getElementById(p[1]).textContent=document.getElementById(p[0]).value+'%';});
+}
+
+function applyLook(name){
+  var L={
+    soft:    {def:36,abs:34,chest:20,back:24,glutes:36,quads:38,hams:26,calves:28,arms:24,pores:22,mottle:16,sheen:10,edge:24,baseStrength:78},
+    athletic:{def:64,abs:70,chest:36,back:44,glutes:58,quads:68,hams:42,calves:46,arms:40,pores:32,mottle:22,sheen:18,edge:20,baseStrength:85},
+    defined: {def:82,abs:88,chest:48,back:60,glutes:70,quads:82,hams:56,calves:58,arms:50,pores:34,mottle:24,sheen:20,edge:16,baseStrength:88},
+    stage:   {def:92,abs:96,chest:58,back:74,glutes:78,quads:90,hams:64,calves:66,arms:58,pores:36,mottle:26,sheen:28,edge:14,baseStrength:90}
+  }[name];
+  Object.keys(L).forEach(function(k){var el=document.getElementById(k);if(el)el.value=L[k];});
+  document.querySelectorAll('.chip[data-look]').forEach(function(x){x.classList.toggle('on',x.dataset.look===name);});
+  syncLabels();drawAtlas();
+}
+
+['skinBase','skinWarm','skinShadow','skinLight','baseStrength','warmth','pores','mottle','sheen','edge',
+ 'def','abs','chest','back','glutes','quads','hams','calves','arms'
+].forEach(function(id){document.getElementById(id).addEventListener('input',function(){syncLabels();drawAtlas();});});
+
+document.querySelectorAll('.chip[data-sz]').forEach(function(x){
+  x.addEventListener('click',function(){
+    size=parseInt(x.dataset.sz);
+    document.querySelectorAll('.chip[data-sz]').forEach(function(y){y.classList.toggle('on',y===x);});
+    resize();drawAtlas();
+  });
+});
+document.querySelectorAll('.chip[data-look]').forEach(function(x){x.addEventListener('click',function(){applyLook(x.dataset.look);});});
+document.querySelectorAll('.part').forEach(function(x){x.addEventListener('click',function(){x.classList.toggle('on');if(typeof stUpdateTarget==='function')setTimeout(stUpdateTarget,0);});});
+document.getElementById('selAll').addEventListener('click',function(){document.querySelectorAll('.part').forEach(function(x){x.classList.add('on');});if(typeof stUpdateTarget==='function')setTimeout(stUpdateTarget,0);});
+document.getElementById('clrAll').addEventListener('click',function(){document.querySelectorAll('.part').forEach(function(x){x.classList.remove('on');});if(typeof stUpdateTarget==='function')setTimeout(stUpdateTarget,0);});
+document.getElementById('btnSel').addEventListener('click',function(){selectedParts().forEach(function(k,i){setTimeout(function(){exportPart(k);},i*140);});});
+document.getElementById('btnAll').addEventListener('click',function(){Object.keys(PARTS).forEach(function(k,i){setTimeout(function(){exportPart(k);},i*140);});});
+document.getElementById('btnAtlas').addEventListener('click',function(){var a=document.createElement('a');a.download='wwe2k26_atlas_'+size+'.png';a.href=mc.toDataURL('image/png');a.click();});
+
+resize();syncLabels();applyLook('athletic');
+</script>
+
+<script>
+var ST={open:false,connected:false,wfMode:'img2img',preset:'fitness',lastUrl:null,lastBlob:null};
+var ST_PRESETS={
+  fitness:{name:'Fitness Model',pos:'realistic female fitness competitor skin texture, healthy tan skin, soft feminine abs, round shoulder caps, sculpted glutes, toned quads and hamstrings, subtle pores, smooth healthy skin, subsurface scattering, balanced sheen, photorealistic, high detail',neg:'cartoon, anime, male physique, bulky masculine abs, clothes, bikini fabric, text, watermark, blurry, lowres, extra limbs, distorted anatomy, harsh fake plastic skin',denoise:55,steps:26,cfg:7,sampler:'dpmpp_2m'},
+  bikini: {name:'Bikini Stage', pos:'realistic female bikini competitor skin, deep competition tan, polished stage sheen, defined glutes, toned thighs, smooth feminine waist, subtle shoulder definition, photorealistic skin pores, beauty lighting, rich warm highlights, contest-ready look',neg:'cartoon, anime, male bodybuilder look, grainy skin, clothing, text, watermark, lowres, muddy colors, overmuscled masculine torso',denoise:60,steps:28,cfg:7.5,sampler:'dpmpp_2m'},
+  glam:   {name:'Soft Glam',   pos:'beautiful realistic female skin, smooth glam finish, healthy glow, subtle muscle tone, soft feminine contours, clean even skin tone, soft highlight rolloff, photorealistic, polished beauty look',neg:'cartoon, rough skin, masculine muscularity, text, watermark, lowres, dirty texture, harsh pores, exaggerated abs',denoise:48,steps:24,cfg:6.5,sampler:'euler_ancestral'},
+  vascular:{name:'Cut & Vascular',pos:'realistic female fitness athlete skin, toned delts, harder leg separation, visible but tasteful vascularity, sculpted glutes, athletic tan skin, photorealistic pores, strong gym lighting, high detail body definition',neg:'cartoon, anime, male physique, monstrous muscles, text, watermark, blurry, lowres, waxy plastic skin, distorted anatomy',denoise:62,steps:28,cfg:7.5,sampler:'dpmpp_2m'}
+};
+
+function stDot(cls){var d=document.getElementById('stDot');d.className='dot'+(cls?' '+cls:'');}
+function stStat(msg,cls){var el=document.getElementById('stConnStat');el.textContent=msg;el.className='stat'+(cls?' '+cls:'');}
+function stPartName(k){return{torsoFront:'Torso Front',torsoBack:'Torso Back',glutes:'Glutes',leftArm:'Left Arm',rightArm:'Right Arm',leftLegFront:'Left Leg Front',rightLegFront:'Right Leg Front',leftLegBack:'Left Leg Back',rightLegBack:'Right Leg Back'}[k]||k;}
+function stCurrentPart(){return selectedParts()[0]||'torsoFront';}
+function stUpdateTarget(){
+  var p=stCurrentPart();
+  document.getElementById('stTargetName').textContent='Working on: '+stPartName(p);
+  document.getElementById('stTargetMeta').textContent='Mode: '+(ST.wfMode==='img2img'?'Refine tile':'From scratch')+' · Preset: '+ST_PRESETS[ST.preset].name;
+  var b=PARTS[p];
+  document.getElementById('stW').value=Math.max(256,Math.round(b.w*size/64)*64);
+  document.getElementById('stH').value=Math.max(256,Math.round(b.h*size/64)*64);
+}
+function stCkptScore(n){var s=0,l=n.toLowerCase();if(l.includes('realvis'))s+=8;if(l.includes('real'))s+=5;if(l.includes('photo'))s+=5;if(l.includes('xl'))s+=4;if(l.includes('pony'))s-=8;if(l.includes('anime'))s-=10;if(l.includes('toon'))s-=8;return s;}
+
+function stToggle(){
+  ST.open=!ST.open;
+  document.getElementById('studio').classList.toggle('open',ST.open);
+  document.getElementById('stHint').textContent=ST.open?'click to collapse':'click to expand';
+  stUpdateTarget();
+}
+
+async function stConnect(){
+  stDot('busy');stStat('Connecting...','busy');
+  try{
+    var url=document.getElementById('cuiUrl').value.replace(/\/+$/,'');
+    var r=await fetch(url+'/system_stats',{signal:AbortSignal.timeout(5000)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    await r.json();
+    ST.connected=true;stDot('ok');
+    stStat('Connected. Choose a realistic checkpoint and click Enhance skin.','ok');
+    document.getElementById('stRenderBtn').disabled=false;
+    stLoadModels(url);
+  }catch(e){
+    ST.connected=false;stDot('err');
+    stStat('Failed: '+e.message+'. Is ComfyUI running with --enable-cors-header?','err');
+    document.getElementById('stRenderBtn').disabled=true;
+  }
+}
+
+async function stLoadModels(base){
+  try{
+    var r=await fetch(base+'/object_info/CheckpointLoaderSimple');
+    var d=await r.json();
+    var ms=(d.CheckpointLoaderSimple.input.required.ckpt_name[0]||[]).slice().sort(function(a,b){return stCkptScore(b)-stCkptScore(a);});
+    var el=document.getElementById('stCkpt');
+    el.innerHTML=ms.map(function(m){return'<option>'+m+'</option>';}).join('');
+    if(ms.length)el.value=ms[0];
+  }catch(e){}
+  try{
+    var r2=await fetch(base+'/object_info/VAELoader');
+    var d2=await r2.json();
+    var vs=d2.VAELoader.input.required.vae_name[0]||[];
+    document.getElementById('stVae').innerHTML='<option value="">Default (baked)</option>'+vs.map(function(v){return'<option>'+v+'</option>';}).join('');
+  }catch(e){}
+}
+
+function stMode(btn){
+  document.querySelectorAll('.mb').forEach(function(x){x.classList.remove('on');});
+  btn.classList.add('on');ST.wfMode=btn.dataset.wf;
+  document.getElementById('stRefCard').style.display=ST.wfMode==='img2img'?'block':'none';
+  stUpdateTarget();
+}
+
+function stPreset(btn){
+  document.querySelectorAll('.pb').forEach(function(x){x.classList.remove('on');});
+  btn.classList.add('on');ST.preset=btn.dataset.pr;
+  var p=ST_PRESETS[ST.preset];
+  document.getElementById('stPos').value=p.pos;
+  document.getElementById('stNeg').value=p.neg;
+  document.getElementById('stDenoise').value=p.denoise;
+  document.getElementById('stDenV').textContent=(p.denoise/100).toFixed(2);
+  document.getElementById('stSteps').value=p.steps;
+  document.getElementById('stCfg').value=p.cfg;
+  document.getElementById('stSampler').value=p.sampler;
+  stUpdateTarget();
+}
+
+function stAdv(){
+  var b=document.getElementById('stAdvBody');b.classList.toggle('open');
+  document.getElementById('stAdvArr').textContent=b.classList.contains('open')?'▴':'▾';
+}
+
+function stGuide(){
+  var g=document.getElementById('stGuideBlock');
+  var on=g.style.display==='block';g.style.display=on?'none':'block';
+  document.getElementById('stGuideArr').textContent=on?'▾':'▴';
+}
+
+function stBuildWf(){
+  var pos=document.getElementById('stPos').value;
+  var neg=document.getElementById('stNeg').value;
+  var w=parseInt(document.getElementById('stW').value);
+  var h=parseInt(document.getElementById('stH').value);
+  var steps=parseInt(document.getElementById('stSteps').value);
+  var cfg=parseFloat(document.getElementById('stCfg').value);
+  var sampler=document.getElementById('stSampler').value;
+  var ckpt=document.getElementById('stCkpt').value;
+  var vae=document.getElementById('stVae').value;
+  var seed=parseInt(document.getElementById('stSeed').value);
+  if(seed===-1)seed=Math.floor(Math.random()*999999999);
+  var wf={
+    "1":{"class_type":"CheckpointLoaderSimple","inputs":{"ckpt_name":ckpt}},
+    "2":{"class_type":"CLIPTextEncode","inputs":{"text":pos,"clip":["1",1]}},
+    "3":{"class_type":"CLIPTextEncode","inputs":{"text":neg,"clip":["1",1]}},
+    "4":{"class_type":"EmptyLatentImage","inputs":{"width":w,"height":h,"batch_size":1}},
+    "5":{"class_type":"KSampler","inputs":{"model":["1",0],"positive":["2",0],"negative":["3",0],"latent_image":["4",0],"seed":seed,"steps":steps,"cfg":cfg,"sampler_name":sampler,"scheduler":"karras","denoise":1.0}},
+    "6":{"class_type":"VAEDecode","inputs":{"samples":["5",0],"vae":["1",2]}},
+    "7":{"class_type":"SaveImage","inputs":{"images":["6",0],"filename_prefix":"wwe2k26_skin"}}
+  };
+  if(vae){wf["1v"]={"class_type":"VAELoader","inputs":{"vae_name":vae}};}
+  if(ST.wfMode==='img2img'){
+    var dn=document.getElementById('stDenoise').value/100;
+    var ap=stCurrentPart(),b=PARTS[ap];
+    var pw=Math.round(b.w*size),ph=Math.round(b.h*size);
+    var oc=document.createElement('canvas');oc.width=pw;oc.height=ph;
+    paintSkin(oc.getContext('2d'),ap,0,0,pw,ph);
+    var b64=oc.toDataURL('image/png').split(',')[1];
+    wf["8"]={"class_type":"ETN_LoadImageBase64","inputs":{"image":b64}};
+    wf["9"]={"class_type":"VAEEncode","inputs":{"pixels":["8",0],"vae":["1",2]}};
+    wf["5"]["inputs"]["latent_image"]=["9",0];
+    wf["5"]["inputs"]["denoise"]=dn;
+    delete wf["4"];
+  }
+  return wf;
+}
+
+function stProgStat(msg,cls){var el=document.getElementById('stProgStat');el.textContent=msg;el.className='stat'+(cls?' '+cls:'');}
+function stSetProg(v){document.getElementById('stProg').value=v;}
+function stResetBtn(){var b=document.getElementById('stRenderBtn');b.disabled=false;b.textContent='Enhance skin';}
+
+async function stRender(){
+  if(!ST.connected){alert('Connect to ComfyUI first.');return;}
+  var btn=document.getElementById('stRenderBtn');btn.disabled=true;btn.textContent='Enhancing...';
+  document.getElementById('stProgWrap').style.display='block';
+  document.getElementById('stApplyBtn').style.display='none';
+  document.getElementById('stDlBtn').style.display='none';
+  stProgStat('Preparing '+stPartName(stCurrentPart())+'...','busy');stSetProg(5);
+  try{
+    var wf=stBuildWf();
+    var url=document.getElementById('cuiUrl').value.replace(/\/+$/,'');
+    var r=await fetch(url+'/prompt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:wf,client_id:'wwe2k26_builder'})});
+    var d=await r.json();
+    if(!r.ok||d.error||d.node_errors){
+      var m=(d.error&&d.error.message)||(d.node_errors&&JSON.stringify(d.node_errors))||'HTTP '+r.status;
+      throw new Error(m);
+    }
+    stProgStat('Queued. Generating...','busy');stSetProg(15);
+    stPoll(url,d.prompt_id);
+  }catch(e){
+    var msg=e.message||'Unknown error';
+    if(msg.includes('ETN_LoadImageBase64'))msg='Node ETN_LoadImageBase64 not found. Install comfyui-tooling-nodes or switch to From scratch mode.';
+    stProgStat(msg,'err');stResetBtn();
+  }
+}
+
+function stPoll(base,pid){
+  var tries=0;
+  var tmr=setInterval(async function(){
+    tries++;
+    if(tries>150){clearInterval(tmr);stProgStat('Timed out after 150s.','err');stResetBtn();return;}
+    try{
+      var r=await fetch(base+'/history/'+pid);
+      var d=await r.json();
+      if(d[pid]){
+        clearInterval(tmr);
+        var out=d[pid].outputs||{};
+        var node=out['7']||out[Object.keys(out)[0]];
+        if(node&&node.images&&node.images.length){
+          var im=node.images[0];
+          var imgUrl=base+'/view?filename='+encodeURIComponent(im.filename)+'&subfolder='+encodeURIComponent(im.subfolder||'')+'&type='+encodeURIComponent(im.type||'output');
+          await stShowResult(imgUrl);
+          stSetProg(100);stProgStat('Skin enhanced!','ok');
+        }else{stProgStat('Done but no output found.','err');}
+        stResetBtn();
+      }else{
+        stSetProg(Math.min(92,15+tries*.6));
+        stProgStat('Generating '+stPartName(stCurrentPart())+'... ('+tries+'s)','busy');
+      }
+    }catch(e){clearInterval(tmr);stProgStat('Poll error: '+e.message,'err');stResetBtn();}
+  },1000);
+}
+
+async function stShowResult(url){
+  var r=await fetch(url);var blob=await r.blob();ST.lastBlob=blob;
+  if(ST.lastUrl)URL.revokeObjectURL(ST.lastUrl);
+  ST.lastUrl=URL.createObjectURL(blob);
+  var out=document.getElementById('rout');out.innerHTML='';
+  var img=new Image();img.src=ST.lastUrl;out.appendChild(img);
+  document.getElementById('stApplyBtn').style.display='';
+  document.getElementById('stDlBtn').style.display='';
+}
+
+function stDl(){if(!ST.lastUrl)return;var a=document.createElement('a');a.download='wwe2k26_'+stCurrentPart()+'_enhanced.png';a.href=ST.lastUrl;a.click();}
+
+function stApply(){
+  if(!ST.lastUrl)return;
+  var ap=stCurrentPart(),b=PARTS[ap];
+  var px=Math.round(b.x*size),py=Math.round(b.y*size),pw=Math.round(b.w*size),ph=Math.round(b.h*size);
+  var img=new Image();
+  img.onload=function(){
+    ctx.save();rrect(ctx,px,py,pw,ph,Math.max(10,pw*.06));ctx.clip();
+    ctx.drawImage(img,px,py,pw,ph);ctx.restore();
+    stProgStat('Applied to '+stPartName(ap)+'. Export when ready.','ok');
+  };
+  img.src=ST.lastUrl;
+}
+
+setTimeout(function(){
+  stPreset(document.querySelector('.pb[data-pr="fitness"]'));
+  stMode(document.querySelector('.mb[data-wf="img2img"]'));
+  stUpdateTarget();
+},80);
+</script>
+</body>
+</html>
